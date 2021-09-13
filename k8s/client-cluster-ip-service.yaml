@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: client-cluster-ip-service
+spec:
+  type: ClusterIP
+  # ClusterIP service is similar to NodePort, but it does not expose Pod(s) to the outside world. 
+  # It only allow access to toher objects in the cluster. An Ingress service is needed to route traffic from outside world to these ClusterIP services 
+  selector:
+    component: web
+  ports:
+    - port: 3000
+      targetPort: 3000

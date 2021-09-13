@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: worker
+  template:
+    metadata:
+      labels:
+        component: worker
+    spec:
+      containers:
+        - name: worker
+          image: xholyspirit/multi-worker
+          # Nothing inside the worker image needs to be accessed by other objects inside the cluster.
+          # Hence, the multi-worker does not need any ports assigned to it, and no Service is needed 
+          # to attach to it either.
+          env: 
+          # Add on a set of environment variables that are going to be passed to the container when they are created in the Pod
+            - name: REDIS_HOST
+              value: redis-cluster-ip-service
+              # Name of the ClusterIP Service that the worker needs to connects to get at the Redis pod
+            - name: REDIS_PORT
+              value: '6379'
