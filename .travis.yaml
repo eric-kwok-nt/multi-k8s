@@ -1,8 +1,15 @@
 sudo: required
 services:
   - docker
+env:
+  global:
+    - SHA=$(git rev-parse HEAD)
+    # Determine the current commit SHA and set it as a travis environment variable
+    - CLOUDSDK_CORE_DISABLE_PROMPTS=1
+    # Configure the Google Cloud CLI to not display any prompts that require user input. E.g. Asking user whether to proceed
 before_install:
   - openssl aes-256-cbc -K $encrypted_9f3b5599b056_key -iv $encrypted_9f3b5599b056_iv -in service-account.json.enc -out service-account.json -d
+  # Unencrypt the credential file
   - curl https://sdk.cloud.google.com | bash > /dev/null;
   # Download and Install google cloud sdk.
   - source $HOME/google-cloud-sdk/path.bash.inc
@@ -10,4 +17,26 @@ before_install:
   - gcloud components update kubectl
   # Install and update kubectl as part of the Google Cloud SDK in the Travis environment
   - gcloud auth activate-service-account --key-file service-account.json
-  # Activate the Google Cloud service account by providing a set of credentials.
+  # Activate the Google Cloud service account by providing a set of unencrypted credentials.
+  - gcloud config set project multi-k8s-325907
+  # Tell Google Cloud which project to work on
+  - gcloud config set compute/zone asia-southeast1-a
+  # Tell Google Cloud your zone
+  - gcloud container clusters get-credentials multi-cluster
+  # Need to tell what cluster it needs to be working with if we issue a set of Kubernetes related command
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+  # Login to Docker 
+  - docker build -t xholyspirit/react-test -f ./client/Dockerfile.dev ./client
+  # Build docker image for testing
+
+script:
+# Describes how we run the actual test for our project
+  - docker run -e CI=true xholyspirit/react-test npm test
+
+deploy: 
+  provider: script
+  # There is no built in provider for Kubernetes cluster and we have put together our own custom sets of commands
+  script: bash ./deploy.sh
+  on: 
+    branch: master
+    # Specify that deployment will be executed only when the master branch is updated

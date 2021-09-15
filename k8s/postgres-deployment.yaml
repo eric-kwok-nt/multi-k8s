@@ -36,7 +36,7 @@ spec:
           env: 
             - name: POSTGRES_PASSWORD
               # Setting up an environment variable of password that we are going to pass into the container.
-              # If the contianer sees this environment variable, it is going to use this instead of the default as password.
+              # If the container sees this environment variable, it is going to use this instead of the default as password.
               valueFrom:
                 secretKeyRef:
                   name: pgpassword
